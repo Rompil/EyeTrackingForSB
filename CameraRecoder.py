@@ -1,0 +1,81 @@
+from Object import CoreObject
+
+import time
+import threading
+from imutils.video import VideoStream
+from imutils import face_utils
+import datetime
+import argparse
+import imutils
+import cv2
+import dlib
+
+
+class CamRecoder(CoreObject):
+
+    def __init__(self, screen, filename=None):
+        self.cap = VideoStream(0)
+        self.cap.start()
+
+        self.filename = filename
+        pass
+
+    def start_record(self):
+        self.is_record = True
+        self.recordingThread = RecordingThread("Video Recording Thread", self.cap)
+        self.recordingThread.start()
+
+    def stop_record(self):
+        self.is_record = False
+
+        if self.recordingThread != None:
+            self.recordingThread.stop()
+
+    def update(self):
+        # I'm going to use this method to update an eye gaze marker on the screen further
+        pass
+
+    def draw(self, surface):
+        # I'm going to use this method to draw an eye gaze marker on the screen further
+        pass
+
+    def finish(self):
+        self.stop_record()
+        self.cap.stop()
+
+
+class RecordingThread(threading.Thread):
+    def __init__(self, name, camera, filename=None):
+        threading.Thread.__init__(self)
+        self.name = name
+        self.isRunning = True
+
+        if filename is None:
+            filename = datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".avi"
+        self.detector = dlib.get_frontal_face_detector()
+        self.predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
+        self.cap = camera
+        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+        self.out = cv2.VideoWriter(filename, fourcc, 30.0, (800, 600), isColor=True)
+
+    def run(self):
+        print("Recording starts.....")
+        while self.isRunning:
+            frame = self.cap.read()
+            frame = imutils.resize(frame, width=800)
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+            rects = self.detector(gray, 0)
+            for rect in rects:
+
+                shape = self.predictor(gray, rect)
+                shape = face_utils.shape_to_np(shape)
+                for (x, y) in shape:
+                    cv2.circle(frame, (x, y), 1, (0, 0, 255), -1)
+            self.out.write(frame)
+        print('Recording is finished.....')
+        self.out.release()
+
+    def stop(self):
+        self.isRunning = False
+        self.out.release()
