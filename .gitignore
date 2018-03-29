@@ -1,0 +1,6 @@
+*.avi
+*.pyc
+__pycache__
+venv
+.idea
+!.gitignore
