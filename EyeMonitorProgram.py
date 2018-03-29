@@ -1,9 +1,8 @@
 import pygame
-# import sys
 
+from CameraRecoder import CamRecoder
 from Core import Core
 from Target import Target
-from CameraRecoder import CamRecoder
 
 
 class MainLoop(Core):

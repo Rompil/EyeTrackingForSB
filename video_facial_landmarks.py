@@ -1,12 +1,11 @@
 # import all necessary packages
-from imutils.video import VideoStream
-from imutils import face_utils
-import datetime
-import argparse
-import imutils
-import cv2
 import time
+
+import cv2
 import dlib
+import imutils
+from imutils import face_utils
+from imutils.video import VideoStream
 
 # construct the argument parser and parse arguments
 

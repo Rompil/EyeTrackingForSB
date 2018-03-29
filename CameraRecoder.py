@@ -1,14 +1,13 @@
-from Object import CoreObject
-
-import time
-import threading
-from imutils.video import VideoStream
-from imutils import face_utils
 import datetime
-import argparse
-import imutils
+import threading
+
 import cv2
 import dlib
+import imutils
+from imutils import face_utils
+from imutils.video import VideoStream
+
+from Object import CoreObject
 
 
 class CamRecoder(CoreObject):
@@ -18,6 +17,9 @@ class CamRecoder(CoreObject):
         self.cap.start()
 
         self.filename = filename
+        self.is_record = False
+
+        self.recordingThread = None
         pass
 
     def start_record(self):
