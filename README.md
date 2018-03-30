@@ -8,6 +8,7 @@ To get this code you need to perform just a few lines of commands in your consol
 git clone git@github.com:Rompil/EyeTrackingForSB.git
 python -m venv EyeTrackingForSB
 cd  EyeTrackingForSB
+cd Scripts & activate
 pip install -r requirements.txt
 ```
 
