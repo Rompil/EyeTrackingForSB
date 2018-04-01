@@ -1,7 +1,15 @@
 import pygame
 from Object import CoreObject, Speed
-import random
+import functools
+import time
 
+def logging(func):
+    begin = time.time()
+    @functools.wraps(func)
+    def inner(*args,**kwargs):
+        print(time.time()-begin,args[0].center)
+        func(*args,**kwargs)
+    return inner
 
 class Target(CoreObject):
     def __init__(self, screen, x, y, r, color=pygame.Color('red'), speed=(10, 10), random=False):
@@ -12,7 +20,7 @@ class Target(CoreObject):
         self.x = x
         self.y = y
         self.random = random
-
+    @logging
     def draw(self, surface):
         pygame.draw.circle(surface,
                            self.color,
@@ -35,5 +43,6 @@ class Target(CoreObject):
             self.speed = Speed(dx,dy)
 
             super().update()
+
 
 
