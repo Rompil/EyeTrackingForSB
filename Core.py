@@ -6,7 +6,7 @@ import pygame
 
 class Core:
     ''' This is a base class for our program.
-    It 
+    It implements basic features.
     '''
 
     def __init__(self, caption, width, height, frame_rate, fullscreen=True):
