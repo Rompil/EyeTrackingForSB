@@ -1,6 +1,15 @@
-*.avi
-*.pyc
+# Directories to ignore
 __pycache__
+Lib
+Scripts
 venv
 .idea
+
+# Files to ignore
+*.avi
+*.pyc
+*.json
+pyvenv.cfg
+
+# Do not ignore
 !.gitignore
