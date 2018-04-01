@@ -7,7 +7,7 @@ from Target import Target
 
 class MainLoop(Core):
     def __init__(self):
-        super().__init__("Main window", 640,480, 60, fullscreen=False)
+        super().__init__("Main window", 640,480, 30, fullscreen=False)
 
         def esc_func(dummy_param):
             "This func is needed it exit frm the program by ESC key"
