@@ -20,7 +20,7 @@ class Target(CoreObject):
         self.x = x
         self.y = y
         self.random = random
-    @logging
+   # @logging
     def draw(self, surface):
         pygame.draw.circle(surface,
                            self.color,
