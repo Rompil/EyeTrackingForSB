@@ -7,7 +7,7 @@ from Target import Target
 
 class MainLoop(Core):
     def __init__(self):
-        super().__init__("Main window", 640,480, 10, fullscreen=False)
+        super().__init__("Main window", 200, 100, 10, fullscreen=False)
 
         def esc_func(dummy_param):
             "This func is needed it exit frm the program by ESC key"
@@ -22,7 +22,12 @@ class MainLoop(Core):
         self.create_CamRecoder()
 
     def create_Target(self):
-        self.objects.append(Target(self.screen, self.size.width // 2, self.size.height // 2, 10, speed=(5, 5)))
+        self.objects.append(Target(self.screen,
+                                   self.size.width // 2,
+                                   self.size.height // 2,
+                                   10,  # dot size
+                                   speed=(5, 5),
+                                   calibration=True))
 
     def create_CamRecoder(self):
         self.objects.append((CamRecoder(self.screen)))
