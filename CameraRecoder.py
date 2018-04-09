@@ -16,9 +16,7 @@ class CamRecoder(CoreObject):
         #super.__init__()
         self.cap = VideoStream(0)
         self.cap.start()
-
         self.filename = filename
-
         self.recordingThread = None
         pass
 
@@ -29,8 +27,6 @@ class CamRecoder(CoreObject):
         self.recordingThread.start()
 
     def stop_record(self):
-
-
         if self.recordingThread != None:
             self.recordingThread.stop()
 
@@ -63,8 +59,14 @@ class RecordingThread(threading.Thread):
         fourcc = cv2.VideoWriter_fourcc(*'MJPG')
         self.out = cv2.VideoWriter(filename, fourcc, 30.0, (800, 600), isColor=True)
 
+    # The method below is running in other thread and it significantly slow down the main thread.
+    # Perhaps it must be rewritten as a slitted process with multiprocess module
     def run(self):
         print("Recording starts.....")
+        # grab the indexes of the facial landmarks for the left and
+        # right eye, respectively
+        (lStart, lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
+        (rStart, rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
         while self.isRunning:
             frame = self.cap.read()
             frame = imutils.resize(frame, width=800)
@@ -73,13 +75,14 @@ class RecordingThread(threading.Thread):
             for rect in rects:
                 shape = self.predictor(gray, rect)
                 shape = face_utils.shape_to_np(shape)
-                for (x, y) in shape:
+                for (x, y) in shape[lStart:lEnd]:
                     cv2.circle(frame, (x, y), 1, (0, 0, 255), -1)
+                for (x, y) in shape[rStart:rEnd]:
+                    cv2.circle(frame, (x, y), 1, (255, 0, 0), -1)
             self.out.write(frame)
         print('Recording is finished.....')
         self.out.release()
 
     def stop(self):
-
        self.isRunning = False
 
