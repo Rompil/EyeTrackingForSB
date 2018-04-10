@@ -11,4 +11,7 @@ cd  EyeTrackingForSB
 cd Scripts & activate
 pip install -r requirements.txt
 ```
-
+The main file to run in your virtual environment is 'EyeMonitorProgram.py'
+```
+python EyeMonitorProgram.py
+```
