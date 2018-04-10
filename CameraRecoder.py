@@ -9,6 +9,7 @@ import imutils
 import numpy as np
 from imutils import face_utils
 from imutils.video import VideoStream
+from imutils.video import FileVideoStream
 
 from Object import CoreObject
 
@@ -17,7 +18,8 @@ class CamRecoder(CoreObject):
 
     def __init__(self, screen, filename=None):
         #super.__init__()
-        self.cap = VideoStream(0)
+        self.cap = FileVideoStream('GOPR9173.mp4')
+        #self.cap = VideoStream(0)
         self.cap.start()
 
         self.filename = filename
@@ -63,8 +65,11 @@ class RecordingThread(threading.Thread):
         self.detector = dlib.get_frontal_face_detector()
         self.predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
         self.cap = camera
-        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-        self.out = cv2.VideoWriter(filename, fourcc, 5.0, (800, 600), isColor=True)
+        width = int(self.cap.stream.get(3))
+        height = int(self.cap.stream.get(3))
+        print("Thi video file size is({} x {} pxls".format(width, height))
+        fourcc = cv2.VideoWriter_fourcc(*'DIVX')
+        self.out = cv2.VideoWriter(filename, fourcc, 5.0, (width, height), isColor=True)
 
     def run(self):
         print("Recording starts.....")
@@ -73,7 +78,7 @@ class RecordingThread(threading.Thread):
         begin_time = time.time()
         while self.isRunning:
             frame = self.cap.read()
-            frame = imutils.resize(frame, width=800)
+            #frame = imutils.resize(frame, width=800)
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             rects = self.detector(gray, 0)
             for rect in rects:
