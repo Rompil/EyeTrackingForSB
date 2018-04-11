@@ -30,7 +30,10 @@ class MainLoop(Core):
                                    calibration=True))
 
     def create_CamRecoder(self):
-        self.objects.append((CamRecoder(self.screen)))
+        self.objects.append((CamRecoder(self.screen,
+                                        self.size.width // 2,
+                                        self.size.height // 2,
+                                        20)))
         self.objects[-1].start_record()
 
     def update(self):
