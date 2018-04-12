@@ -7,7 +7,7 @@ from Target import Target
 
 class MainLoop(Core):
     def __init__(self):
-        super().__init__("Main window", 200, 100, 10, fullscreen=False)
+        super().__init__("Main window", 1920, 1080, 10, fullscreen=True)
 
         def esc_func(dummy_param):
             "This func is needed it exit frm the program by ESC key"
@@ -18,7 +18,7 @@ class MainLoop(Core):
 
     def createObjects(self):
         "Add new objects here"
-        self.create_Target()
+        # self.create_Target()
         self.create_CamRecoder()
 
     def create_Target(self):

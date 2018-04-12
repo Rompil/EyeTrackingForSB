@@ -4,7 +4,7 @@ from utilitis import *
 
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
-name = ".\data\GOPR9180"
+name = ".\data\SAMPLE_VIDEO3_TR"
 ext = ".JPG"
 frame = cv2.imread(name + ext)
 if frame is not None:
@@ -24,8 +24,9 @@ for rect in rects:
 
 cv2.imshow("Frame", frame)
 cv2.waitKey(5)
-cv2.imwrite(name + '_with_landmarks' + ext, frame)
-
+full_name = name + '_with_landmarks' + ext
+cv2.imwrite(full_name, frame)
+print(full_name)
 
 class Calibration():
     def __init__(self):

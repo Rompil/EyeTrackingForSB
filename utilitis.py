@@ -8,22 +8,23 @@ from imutils import face_utils
 
 def findCircles(image):
     ''' This function finds circles in the given image and returns a list of them'''
+    image = cv2.bilateralFilter(image, 13, 25, 25)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    gray = cv2.medianBlur(gray, 21)
+    gray = cv2.medianBlur(gray, 17)
     # detect circles in the image
     circles = cv2.HoughCircles(gray,  # processed image in grayscale
                                cv2.HOUGH_GRADIENT,  # the only method in CV2 for detection
-                               1.1,  # The inverse ratio of resolution.
+                               2,  # The inverse ratio of resolution.
                                5,  # Minimal distance between circle's centers
                                param1=80,  # Upper threshold for the internal Canny edge detector.
                                param2=10,  # Threshold for center detection.
-                               minRadius=0, maxRadius=100)
+                               minRadius=0, maxRadius=10)
 
     # ensure at least some circles were found
     if circles is not None:
         # convert the (x, y) coordinates and radius of the circles to integers
         circles = np.round(circles[0, :]).astype("int")
-        print("find {} circles".format(len(circles)))
+        # print("find {} circles".format(len(circles)))
     return circles
 
 
@@ -38,7 +39,7 @@ def decoSaveImage(func):
         filename = os.path.join(path, (names[func._counter % 2]).format(func._counter // 2))
         func._counter += 1
         cv2.imwrite(filename, img)
-        print("{} is saved".format(filename))
+        #print("{} is saved".format(filename))
         return img, tlcorner
 
     return inner
@@ -65,7 +66,7 @@ def drawCircles(image, circles, offset=(0, 0)):
     ''' this function draws circles on the image with given coordinates plus offset'''
     # loop over the (x, y) coordinates and radius of the circles
     if circles:  # remove after all
-        print(circles)  # !!!!! Тут проблема!!!!
+        #print(circles)  # !!!!! Тут проблема!!!!
         for (x, y, r) in circles:
             # draw the circle in the output image, then draw a rectangle
             # corresponding to the center of the circle
@@ -100,7 +101,7 @@ def filter_circles(circles, eye_landmarks, offset=(0, 0)):
     :return: circle that is closer to the center of an eye
     '''
     if circles is not None:
-        displaces = [np.linalg.norm(np.array(iris_replace(c, eye_landmarks, offset))) for c in circles]
+        displaces = [np.linalg.norm(np.array(iris_replace(c, eye_landmarks, offset) / c[2])) for c in circles]
         return circles[displaces.index(min(displaces))]
 
 
@@ -131,6 +132,46 @@ def all_in_one_pocessing(frame, shape):
 
     drawCircles(frame, liris, lshift)
     drawCircles(frame, riris, rshift)
+
+    for (x, y) in shape[rLeft:rRight]:
+        cv2.circle(frame, (x, y), 1, (0, 0, 255), -1)
+    for (x, y) in shape[lLeft:lRight]:
+        cv2.circle(frame, (x, y), 1, (255, 0, 0), -1)
+
+    return (ldisplace, rdisplace)
+    pass
+
+
+def find_center(image):
+    image = cv2.bilateralFilter(image, 13, 25, 25)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    Gimage = cv2.GaussianBlur(gray, (1, 1), 2, 0)
+    Center_min = np.argwhere(Gimage == np.min(Gimage))
+    a_c = np.mean(Center_min, axis=0)
+    return (a_c[1], a_c[0], 10)
+
+
+def all_in_one_pocessing_with_G(frame, shape):
+    leye, lshift = cropRectImage(frame, shape[lLeft:lRight])
+    reye, rshift = cropRectImage(frame, shape[rLeft:rRight])
+
+    li = find_center(leye)
+    ri = find_center(reye)
+    # print("Left eye {} and Right eye {}".format(li, ri))
+    ldisplace, rdisplace = None, None
+
+    # ужасный костыль, надо исправить.
+    if li is not None:
+        ldisplace = iris_replace(li, shape[lLeft:lRight], lshift)
+
+    if ri is not None:
+        rdisplace = iris_replace(ri, shape[rLeft:rRight], rshift)
+
+    li = tuple(int(x) for x in li)
+    ri = tuple(int(x) for x in ri)
+
+    drawCircles(frame, [li], lshift)
+    drawCircles(frame, [ri], rshift)
 
     for (x, y) in shape[rLeft:rRight]:
         cv2.circle(frame, (x, y), 1, (0, 0, 255), -1)

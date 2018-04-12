@@ -1,6 +1,3 @@
-import dlib
-import datetime
-from utilitis import *
 import datetime
 
 import dlib
@@ -10,7 +7,7 @@ from utilitis import *
 
 def main():
     # cap = FileVideoStream("GOPR9183.MP4").start()
-    cap = cv2.VideoCapture("test.MP4")
+    cap = cv2.VideoCapture(".\data\SAMPLE_VIDEO3.MP4")
     detector = dlib.get_frontal_face_detector()
     predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
@@ -27,7 +24,7 @@ def main():
     while cap.isOpened():
         ret, frame = cap.read()
         if ret:
-            frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)  # !!!!! it is better to remove this line
+            # frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)  # !!!!! it is better to remove this line
 
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -38,7 +35,7 @@ def main():
             for rect in rects:
                 shape = predictor(gray, rect)
                 shape = face_utils.shape_to_np(shape)
-                ld, rd = all_in_one_pocessing(frame, shape)
+                ld, rd = all_in_one_pocessing_with_G(frame, shape)
                 print(ld, rd)
 
                 for (x, y) in shape:
@@ -47,7 +44,7 @@ def main():
             # frame = cv2.resize(frame, (int(0.25* width), int(0.25 * height)), interpolation=cv2.INTER_CUBIC)
             cv2.imshow("Frame", frame)
             cv2.waitKey(1)
-            frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)  # !!!! and this too
+            #frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)  # !!!! and this too
             out.write(frame)
         else:
             break
