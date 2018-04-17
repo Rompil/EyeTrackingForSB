@@ -4,7 +4,7 @@ from utilitis import *
 
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
-name = ".\data\SAMPLE_VIDEO3_TR"
+name = ".\data\\20180409_202604"
 ext = ".JPG"
 frame = cv2.imread(name + ext)
 if frame is not None:
