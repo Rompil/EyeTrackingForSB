@@ -9,6 +9,7 @@ from Object import CoreObject
 from calibration import *
 from utilitis import *
 
+# тут указаны параметры калибровки, их нужно проверить.
 calibration_data['TLEyePos'] = Point(16.5, +30.0)
 calibration_data['TREyePos'] = Point(-17.0, +30.5)
 calibration_data['BLEyePos'] = Point(12.5, -2.5)
@@ -36,6 +37,7 @@ class CamRecoder(CoreObject):
 
         self.calibrator = Calibrator(screen.get_size(), calibration_data)
 
+        self.points = []
         pass
 
     def start_record(self):
@@ -58,16 +60,20 @@ class CamRecoder(CoreObject):
             center = calibrator.translate(eye_pos[0])
             # print('update func {}'.format(center))
             self.x, self.y = tuple(int(x) for x in center)
+            # костыль, но нужно в списке не менее двух точек для начала
+            if len(self.points) == 0:
+                self.points.append((self.x, self.y))
+            self.points.append((self.x, self.y))
             print('New coordinates are {}, {}'.format(self.x, self.y))
 
         pass
 
     def draw(self, surface):
         # I'm going to use this method to draw an eye gaze marker on the screen further
-        pygame.draw.circle(surface,
-                           pygame.Color('yellow'),
-                           (self.x, self.y),
-                           20)
+        if self.points:
+            pygame.draw.aalines(surface, pygame.Color('green'), False, self.points, 1)
+            for p in self.points:
+                pygame.draw.circle(surface, pygame.Color('yellow'), p, 5)
         pass
 
     def finish(self):
@@ -114,6 +120,7 @@ class RecordingThread(threading.Thread):
 
         print('Recording is finished.....')
         self.out.release()
+        self.stateTwoEyes = None
         pass
 
     @property
