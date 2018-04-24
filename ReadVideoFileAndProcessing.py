@@ -35,7 +35,7 @@ def main():
             for rect in rects:
                 shape = predictor(gray, rect)
                 shape = face_utils.shape_to_np(shape)
-                ld, rd = all_in_one_processing_mixed(frame, shape)
+                ld, rd = all_in_one_processing_corr(frame, shape)
                 print(ld, rd)
 
                 for (x, y) in shape:
