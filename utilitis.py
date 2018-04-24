@@ -5,13 +5,15 @@ import cv2
 import numpy as np
 from imutils import face_utils
 
+import templateMethod as tm
+
 
 def findCircles(image):
     ''' This function finds circles in the given image and returns a list of them'''
-    expected_radius = int(image.shape[1] * 0.33 * 1.25 / 2)  # assume an iris is  one third of an eye width plus 25%
+    expected_radius = int(image.shape[1] * 0.33 * 1.45 / 2)  # assume an iris is  one third of an eye width plus 25%
 
     cv2.normalize(image, image, 0, 255, cv2.NORM_MINMAX)
-    image = cv2.edgePreservingFilter(image, flags=2, sigma_s=100, sigma_r=0.35)
+    # image = cv2.edgePreservingFilter(image, flags=1, sigma_s=50, sigma_r=0.35)
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     gray = cv2.medianBlur(gray, 7)  # 27 - best result
@@ -23,30 +25,37 @@ def findCircles(image):
     #                            param1=150,  # Upper threshold for the internal Canny edge detector.
     #                            param2=40,  # Threshold for center detection.
     #                            minRadius=expected_radius//2, maxRadius=expected_radius)
-    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.8, 5, param1=180, param2=40, minRadius=15, maxRadius=35)
+    circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT,
+                               3,
+                               image.shape[1] // 2,
+                               param1=120,
+                               param2=25,
+                               minRadius=expected_radius // 2,
+                               maxRadius=expected_radius)
     # ensure at least some circles were found
     if circles is not None:
         # convert the (x, y) coordinates and radius of the circles to integers
         # circles = np.round(circles[0, :]).astype("int")
         pass
+        print('\n')
         print(circles)
-        print("find {} circles".format(len(circles)))
+        print("find {} circle(s)".format(len(circles)))
         return circles[0, :]
 
 
 def decoSaveImage(func):
     names = ['leftEye{}.jpg', 'rightEye{}.jpg']
     func._counter = 0
-    path = r'C:\Users\sberlab6\PycharmProjects\EyeTrackingForSB\data'
+    path = '.\\data'
     func.args = []
     func.kwargs = None
 
     @functools.wraps(func)
     def inner(*args, **kwargs):
-        if func._counter // 2 == 0:
-            func.args.append(args)
-            func.kwargs = kwargs
-        img, tlcorner = func(args[0], func.args[func._counter % 2][1], **(func.kwargs))
+        # if func._counter // 2 == 0:
+        #     func.args.append(args)
+        #     func.kwargs = kwargs
+        img, tlcorner = func(*args, **kwargs)
         filename = os.path.join(path, (names[func._counter % 2]).format(func._counter // 2))
         func._counter += 1
         cv2.imwrite(filename, img)
@@ -66,7 +75,7 @@ def cropRectImage(image, points_list):
     min_y = min(points_list, key=lambda item: item[1])[1]
     max_x = max(points_list, key=lambda item: item[0])[0]
     max_y = max(points_list, key=lambda item: item[1])[1]
-    overfit = 5
+    overfit = 50
     # print(min_x,min_y,max_x,max_y)
     croped_image = image[min_y - overfit: max_y + overfit, min_x - overfit: max_x + overfit, ]
     # cv2.rectangle(image, (min_x, min_y), (max_x, max_y), (0, 128, 255), 1)
@@ -78,12 +87,12 @@ def drawCircles(image, circles, offset=(0, 0)):
     # loop over the (x, y) coordinates and radius of the circles
     if circles:  # remove after all
         #print(circles)  # !!!!! Тут проблема!!!!
-        for (x, y, r) in circles:
+        for c in circles:
             # draw the circle in the output image, then draw a rectangle
             # corresponding to the center of the circle
-            x = int(x + offset[0])
-            y = int(y + offset[1])
-            r = int(r)
+            x = int(c[0] + offset[0])
+            y = int(c[1] + offset[1])
+            r = int(c[2])
             cv2.circle(image, (x, y), r, (0, 255, 0), 1)
             cv2.rectangle(image, (x - 1, y - 1), (x + 1, y + 1), (0, 128, 255), -1)
 
@@ -117,19 +126,36 @@ def filter_circles(circles, eye_landmarks, offset=(0, 0)):
         return [circles[displaces.index(min(displaces))]]
 
 
+def decoSaveDataBeetwenCalls(func):
+    func.counter = 0
+    func.dataToStore = []
+
+    @functools.wraps(func)
+    def inner(*args, **kwargs):
+        if func.counter < 2:
+            func.dataToStore.append(args[1])
+        print('\nStrored Data {}\n'.format(func.dataToStore[func.counter % 2]))
+        result = func(args[0], func.dataToStore[func.counter % 2], **kwargs)
+        func.dataToStore[func.counter % 2] = result
+        func.counter += 1
+        return np.array([result])
+        pass
+
+    return inner
+
+
+@decoSaveDataBeetwenCalls
 def filter_circles_dark_point(circles, dark_point, offset=(0, 0)):
     if circles is not None:
         circles = np.array(circles)
-
-        distances = circles - np.array([dark_point[0], dark_point[1], 0])  # get dist to every circle dx, dy
-        distances_len = np.array([d[0] ** 2 + d[1] ** 2 for d in distances])  # get distance lenght
-        median_dist = np.median(distances_len)  # find median value
-        selected_circles = [circles[i] for i in range(len(circles)) if
-                            distances_len[i] <= median_dist]  # leave only close circles
-        max_radius_index = np.argmax(selected_circles, axis=0)[2]  # find circle with maximum radius
-        return [selected_circles[max_radius_index]]  # leave only circle with maximum radius
+        temp = dark_point
+        distances = circles - temp  # get dist to every circle dx, dy
+        distances_len = np.array([d[0] ** 2 + d[1] ** 2 + d[2] ** 2 for d in distances])  # get distance lenght
+        min_dist_index = np.argmin(distances_len)  # find median value
+        return [circles[min_dist_index]]  # leave only circle with maximum radius
     else:
-        return [[dark_point[0], dark_point[1], 20]]
+        return dark_point
+
 
 def all_in_one_pocessing(frame, shape):
     leye, lshift = cropRectImage(frame, shape[lLeft:lRight])
@@ -168,21 +194,22 @@ def all_in_one_pocessing(frame, shape):
     pass
 
 
-def find_center(image):
+def find_darkest_point(image):
     #image = cv2.bilateralFilter(image, 13, 25, 25)
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    Gimage = cv2.GaussianBlur(gray, (5, 5), 2, 0)
+    local_image = image.copy()
+    # gray = cv2.cvtColor(local_image, cv2.COLOR_BGR2GRAY)
+    Gimage = cv2.GaussianBlur(local_image, (7, 7), 3, 0)
     Center_min = np.argwhere(Gimage == np.min(Gimage))
     a_c = np.mean(Center_min, axis=0)
-    return (a_c[1], a_c[0], 10)
+    return np.array([[a_c[1], a_c[0], 15]])
 
 
 def all_in_one_processing_with_G(frame, shape):
     leye, lshift = cropRectImage(frame, shape[lLeft:lRight])
     reye, rshift = cropRectImage(frame, shape[rLeft:rRight])
 
-    li = find_center(leye)
-    ri = find_center(reye)
+    li = find_darkest_point(leye)
+    ri = find_darkest_point(reye)
     # print("Left eye {} and Right eye {}".format(li, ri))
     ldisplace, rdisplace = None, None
 
@@ -217,8 +244,8 @@ def all_in_one_processing_mixed(frame, shape):
     liris = findCircles(leye)
     riris = findCircles(reye)
 
-    dark_left_eye = find_center(leye)
-    dark_right_eye = find_center(reye)
+    dark_left_eye = find_darkest_point(leye)
+    dark_right_eye = find_darkest_point(reye)
 
     li = filter_circles_dark_point(liris, dark_left_eye, lshift)
     ri = filter_circles_dark_point(riris, dark_right_eye, rshift)
@@ -236,8 +263,8 @@ def all_in_one_processing_mixed(frame, shape):
     else:
         riris = None
 
-    drawCircles(frame, liris, lshift)
-    drawCircles(frame, riris, rshift)
+    drawCircles(frame, [liris], lshift)
+    drawCircles(frame, [riris], rshift)
 
     for (x, y) in shape[rLeft:rRight]:
         cv2.circle(frame, (x, y), 1, (0, 0, 255), -1)
@@ -248,11 +275,35 @@ def all_in_one_processing_mixed(frame, shape):
     pass
 
 
+def all_in_one_processing_corr(frame, shape):
+    ldisplace, rdisplace = None, None
+
+    leye, lshift = cropRectImage(frame, shape[lLeft:lRight])
+    reye, rshift = cropRectImage(frame, shape[rLeft:rRight])
+    expected_radius = 21
+    liris = tm.GetEyeCenterByTemplate(leye, expected_radius)
+    # liris += (expected_radius,)
+    riris = tm.GetEyeCenterByTemplate(reye, expected_radius)
+    # riris += (expected_radius,)
+    print(liris, riris)
+    drawCircles(frame, [liris], lshift)
+    drawCircles(frame, [riris], rshift)
+
+    ldisplace = iris_replace(liris, shape[lLeft:lRight], lshift)
+    rdisplace = iris_replace(riris, shape[rLeft:rRight], rshift)
+
+    return (ldisplace, rdisplace)
+
 if __name__ == '__main__':
-    for i in range(568):
+    for i in range(0, 568,1):
         print(i)
-        image = cv2.imread('.\\data\\rightEye{}.jpg'.format(i))
-        result = findCircles(image)
-        drawCircles(image, result.tolist())
+        image = cv2.imread('.\\data\\LeftEye{}.jpg'.format(i))
+        liris = findCircles(image)
+        dark_left_eye = find_darkest_point(image)
+        li = filter_circles_dark_point(liris, dark_left_eye)
+        drawCircles(image, li)
+        print(dark_left_eye)
+        print(li)
+
         cv2.imshow("test", image)
-        cv2.waitKey(-1)
+        cv2.waitKey()
