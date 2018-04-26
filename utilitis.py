@@ -37,9 +37,9 @@ def findCircles(image):
         # convert the (x, y) coordinates and radius of the circles to integers
         # circles = np.round(circles[0, :]).astype("int")
         pass
-        print('\n')
-        print(circles)
-        print("find {} circle(s)".format(len(circles)))
+        #print('\n')
+        #print(circles)
+        #print("find {} circle(s)".format(len(circles)))
         return circles[0, :]
 
 
@@ -59,7 +59,7 @@ def decoSaveImage(func):
         filename = os.path.join(path, (names[func._counter % 2]).format(func._counter // 2))
         func._counter += 1
         cv2.imwrite(filename, img)
-        print("{} is saved".format(filename))
+        #print("{} is saved".format(filename))
         return img, tlcorner
 
     return inner
@@ -134,7 +134,7 @@ def decoSaveDataBeetwenCalls(func):
     def inner(*args, **kwargs):
         if func.counter < 2:
             func.dataToStore.append(args[1])
-        print('\nStrored Data {}\n'.format(func.dataToStore[func.counter % 2]))
+        #print('\nStrored Data {}\n'.format(func.dataToStore[func.counter % 2]))
         result = func(args[0], func.dataToStore[func.counter % 2], **kwargs)
         func.dataToStore[func.counter % 2] = result
         func.counter += 1
@@ -166,7 +166,7 @@ def all_in_one_pocessing(frame, shape):
 
     li = filter_circles(liris, shape[lLeft:lRight], lshift)
     ri = filter_circles(riris, shape[rLeft:rRight], rshift)
-    print("Left eye {} and Right eye {}".format(li[0], ri[0]))
+    #print("Left eye {} and Right eye {}".format(li[0], ri[0]))
     ldisplace, rdisplace = None, None
 
     # ужасный костыль, надо исправить.
@@ -249,7 +249,7 @@ def all_in_one_processing_mixed(frame, shape):
 
     li = filter_circles_dark_point(liris, dark_left_eye, lshift)
     ri = filter_circles_dark_point(riris, dark_right_eye, rshift)
-    print("Left eye {} and Right eye {}".format(li[0], ri[0]))
+    #print("Left eye {} and Right eye {}".format(li[0], ri[0]))
     # ужасный костыль, надо исправить.
     if li[0] is not None:
         # ldisplace = iris_replace(li[0], shape[lLeft:lRight], lshift)
@@ -285,7 +285,7 @@ def all_in_one_processing_corr(frame, shape):
     # liris += (expected_radius,)
     riris = tm.GetEyeCenterByTemplate(reye, expected_radius)
     # riris += (expected_radius,)
-    print(liris, riris)
+    #print(liris, riris)
     drawCircles(frame, [liris], lshift)
     drawCircles(frame, [riris], rshift)
 

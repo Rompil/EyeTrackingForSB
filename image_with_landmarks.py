@@ -4,7 +4,7 @@ from utilitis import *
 
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
-name = ".\data\\BottomLeft"
+name = ".\data\\BL"
 ext = ".JPG"
 frame = cv2.imread(name + ext)
 if frame is not None:
@@ -15,7 +15,7 @@ rects = detector(gray, 0)
 for rect in rects:
     shape = predictor(gray, rect)
     shape = face_utils.shape_to_np(shape)
-    ld, rd = all_in_one_processing_mixed(frame, shape)
+    ld, rd = all_in_one_processing_corr(frame, shape)
     print(ld, rd)
     for (x, y) in shape:
         cv2.circle(frame, (x, y), 1, (0, 0, 255), 3)
