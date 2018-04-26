@@ -4,7 +4,7 @@ Point = namedtuple('Point', 'x y')
 Screen_size = namedtuple('Screen_size', 'width height')
 
 calibration_data = {}
-calibration_data['TLEyePos'] = Point(10, 10)
+calibration_data['TLEyePos'] = Point(-10, 10)
 calibration_data['TREyePos'] = Point(10, 10)
 calibration_data['BLEyePos'] = Point(-10, -10)
 calibration_data['BREyePos'] = Point(10, -10)
@@ -30,9 +30,9 @@ class Calibrator():
             EyeCenter = Point(*eyecenter)
             x = self.screen_size.width * (EyeCenter.x - self.xeyeleft) / (self.xyeyright - self.xeyeleft)
             y = self.screen_size.height * (EyeCenter.y - self.yeyetop) / (self.yeyebottom - self.yeyetop)
-            return (x, y)
+            return (int(x), int(y))
 
 
 if __name__ == '__main__':
     c = Calibrator((100, 100), calibration_data)
-    print(c.translate((0, 0)))
+    print(c.translate((-10, 0)))
