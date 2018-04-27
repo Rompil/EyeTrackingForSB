@@ -45,7 +45,7 @@ def main():
             # cv2.imshow("Frame", frame)
             # cv2.waitKey(-1)
             frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)  # !!!! and this too
-            #out.write(frame)
+            out.write(frame)
         else:
             break
     cap.release()

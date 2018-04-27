@@ -88,7 +88,8 @@ def GetEyeCenterByTemplate(eye, eyeradius):
     max_index = np.argmax(max_val)
     w, h = templates.negative.shape[:2]
     maximum_location = (max_loc[max_index][0] + w // 2, max_loc[max_index][1] + h // 2)
-    #print(maximum_location)
+
+    # print('Max location ', maximum_location)
     return (*maximum_location, r_list[max_index])
 
 
