@@ -47,9 +47,80 @@ Point GetEyeCenterByTemplate(Mat eye, int eyeradius)
 
 	return pmax;
 }
+int _refineSrchTemplate(const cv::Mat &mat, cv::Mat &matTmpl, cv::Point2f &ptResult)
+{
+    cv::Mat matWarp = cv::Mat::eye(2, 3, CV_32FC1);
+    matWarp.at<float>(0,2) = ptResult.x;
+    matWarp.at<float>(1,2) = ptResult.y;
+    int number_of_iterations = 200;
+    double termination_eps = 1e-10;
+
+    cv::findTransformECC ( matTmpl,
+                           mat,
+                           matWarp,
+                           MOTION_TRANSLATION,
+                           TermCriteria(TermCriteria::COUNT+TermCriteria::EPS,
+                                        number_of_iterations,
+                                        termination_eps)
+                            );
+    ptResult.x = matWarp.at<float>(0,2);
+    ptResult.y = matWarp.at<float>(1,2);
+    return 0;
+}
+
 '''
 import cv2
 import numpy as np
+
+
+def _refineSrchTemplate(mat, matTmpl, ptResult):
+    '''
+
+    :param mat:
+    :param matTmpl:
+    :param ptResult:
+    :return:
+    '''
+    # Define the motion model
+    warp_mode = cv2.MOTION_TRANSLATION
+    warp_matrix = np.eye(2, 3, dtype=np.float32)
+    warp_matrix[0, 2], warp_matrix[1, 2] = ptResult[0], ptResult[1]
+    # Specify the number of iterations.
+    number_of_iterations = 1200;
+
+    # Specify the threshold of the increment
+    # in the correlation coefficient between two iterations
+    termination_eps = 1e-6;
+    # Define termination criteria
+    criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, number_of_iterations, termination_eps)
+
+    # Run the ECC algorithm. The results are stored in warp_matrix.
+    try:
+        (cc, warp_matrix) = cv2.findTransformECC(matTmpl, mat, warp_matrix, warp_mode, criteria)
+    except Exception:
+        pass
+    return warp_matrix[0, 2], warp_matrix[1, 2]
+
+
+def subPixelAcc(image, location):
+    A = np.array([[1, 1, -1, -1, 1],
+                  [1, 0, -1, 0, 1],
+                  [1, 1, -1, 1, 1],
+                  [0, 1, 0, -1, 1],
+                  [0, 0, 0, 0, 1],
+                  [0, 1, 0, 1, 1],
+                  [1, 1, 1, -1, 1],
+                  [1, 0, 1, 0, 1],
+                  [1, 1, 1, 1, 1]])
+    Y = image[location[0] - 1:location[0] + 2, location[1] - 1:location[1] + 2]
+    Y = np.reshape(Y, (9, 1))
+    aTa = np.dot(A.T, A)
+    inv_aTa = np.linalg.inv(aTa)
+    aTY = np.dot(A.T, Y)
+    W = np.dot(inv_aTa, aTY)
+    dx = -W[2] / (2 * W[0])
+    dy = -W[3] / (2 * W[1])
+    return (location[0] + dx, location[1] + dy)
 
 
 class EyeTemplates:
@@ -72,22 +143,26 @@ def GetEyeTemplates(eyeradius):
 def GetEyeCenterByTemplate(eye, eyeradius):
     cv2.normalize(eye, eye, 0, 255, cv2.NORM_MINMAX)
     eye = cv2.cvtColor(eye, cv2.COLOR_BGR2GRAY)
-    r_list = [eyeradius - 1, eyeradius, eyeradius + 1]
+    var = 1
+    r_list = range(eyeradius - var, eyeradius + var + 1)
     max_loc = []
     max_val = []
     i = 0
     for r in r_list:
+        # print(r)
         templates = GetEyeTemplates(r)
         PosRes = cv2.matchTemplate(eye, templates.positive, cv2.TM_CCORR)
         NegRes = cv2.matchTemplate(eye, templates.negative, cv2.TM_CCORR)
         Res = PosRes - NegRes
         Res = Res / (r ** 2)
         temp = cv2.minMaxLoc(Res)
+        # float_location = _refineSrchTemplate(eye, templates.positive, temp[3])
+        float_location = subPixelAcc(Res, temp[3])
         max_val.append(temp[1])
-        max_loc.append(temp[3])
+        max_loc.append(float_location)
     max_index = np.argmax(max_val)
     w, h = templates.negative.shape[:2]
-    maximum_location = (max_loc[max_index][0] + w // 2, max_loc[max_index][1] + h // 2)
+    maximum_location = (max_loc[max_index][0] + w / 2, max_loc[max_index][1] + h / 2)
 
     # print('Max location ', maximum_location)
     return (*maximum_location, r_list[max_index])
@@ -104,16 +179,18 @@ if __name__ == '__main__':
 
     # plt.show()
 
-    image = cv2.imread('.\\data\\test_eye.jpg')
+    image = cv2.imread('.\\data\\lefteye100.jpg')
     # image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     print(image.shape)
-    point = GetEyeCenterByTemplate(image, 105)
+    point = GetEyeCenterByTemplate(image, 21)
+
     print(point)
-    cv2.circle(image, point, 1, 200, 2)
+    ipoint = np.around(point).astype('int')
+    cv2.circle(image, (ipoint[0], ipoint[1]), 1, 200, 2)
     cv2.circle(image,
-               (point[0], point[1]),
-               105,
+               (ipoint[0], ipoint[1]),
+               point[2],
                255,
-               4)
+               2)
     cv2.imshow('Eye', image)
     cv2.waitKey()
