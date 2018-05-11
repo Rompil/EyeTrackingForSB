@@ -112,7 +112,7 @@ def subPixelAcc(image, location):
                   [1, 1, 1, -1, 1],
                   [1, 0, 1, 0, 1],
                   [1, 1, 1, 1, 1]])
-    Y = image[location[0] - 1:location[0] + 2, location[1] - 1:location[1] + 2]
+    Y = image[location[1] - 1:location[1] + 2, location[0] - 1:location[0] + 2]
     Y = np.reshape(Y, (9, 1))
     aTa = np.dot(A.T, A)
     inv_aTa = np.linalg.inv(aTa)
@@ -143,7 +143,7 @@ def GetEyeTemplates(eyeradius):
 def GetEyeCenterByTemplate(eye, eyeradius):
     cv2.normalize(eye, eye, 0, 255, cv2.NORM_MINMAX)
     eye = cv2.cvtColor(eye, cv2.COLOR_BGR2GRAY)
-    var = 1
+    var = 0
     r_list = range(eyeradius - var, eyeradius + var + 1)
     max_loc = []
     max_val = []
@@ -156,6 +156,7 @@ def GetEyeCenterByTemplate(eye, eyeradius):
         Res = PosRes - NegRes
         Res = Res / (r ** 2)
         temp = cv2.minMaxLoc(Res)
+        # print(temp, Res.shape)
         # float_location = _refineSrchTemplate(eye, templates.positive, temp[3])
         float_location = subPixelAcc(Res, temp[3])
         max_val.append(temp[1])
@@ -165,7 +166,7 @@ def GetEyeCenterByTemplate(eye, eyeradius):
     maximum_location = (max_loc[max_index][0] + w / 2, max_loc[max_index][1] + h / 2)
 
     # print('Max location ', maximum_location)
-    return (*maximum_location, r_list[max_index])
+    return (maximum_location[0][0], maximum_location[1][0], r_list[max_index])
 
 
 if __name__ == '__main__':
@@ -191,6 +192,6 @@ if __name__ == '__main__':
                (ipoint[0], ipoint[1]),
                point[2],
                255,
-               2)
+               1)
     cv2.imshow('Eye', image)
     cv2.waitKey()
