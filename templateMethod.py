@@ -103,6 +103,7 @@ def _refineSrchTemplate(mat, matTmpl, ptResult):
 
 
 def subPixelAcc(image, location):
+    dx, dy = 0.0, 0.0
     A = np.array([[1, 1, -1, -1, 1],
                   [1, 0, -1, 0, 1],
                   [1, 1, -1, 1, 1],
@@ -112,15 +113,19 @@ def subPixelAcc(image, location):
                   [1, 1, 1, -1, 1],
                   [1, 0, 1, 0, 1],
                   [1, 1, 1, 1, 1]])
-    Y = image[location[1] - 1:location[1] + 2, location[0] - 1:location[0] + 2]
-    Y = np.reshape(Y, (9, 1))
-    aTa = np.dot(A.T, A)
-    inv_aTa = np.linalg.inv(aTa)
-    aTY = np.dot(A.T, Y)
-    W = np.dot(inv_aTa, aTY)
-    dx = -W[2] / (2 * W[0])
-    dy = -W[3] / (2 * W[1])
-    return (location[0] + dx, location[1] + dy)
+    try:
+        Y = image[location[1] - 1:location[1] + 2, location[0] - 1:location[0] + 2]
+        Y = np.reshape(Y, (9, 1))
+        aTa = np.dot(A.T, A)
+        inv_aTa = np.linalg.inv(aTa)
+        aTY = np.dot(A.T, Y)
+        W = np.dot(inv_aTa, aTY)
+        dx = -W[2] / (2 * W[0])
+        dy = -W[3] / (2 * W[1])
+    except:
+        pass
+    finally:
+        return (location[0] + dx, location[1] + dy)
 
 
 class EyeTemplates:
@@ -180,10 +185,10 @@ if __name__ == '__main__':
 
     # plt.show()
 
-    image = cv2.imread('.\\data\\lefteye100.jpg')
+    image = cv2.imread('.\\imgs\\100.jpg')
     # image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     print(image.shape)
-    point = GetEyeCenterByTemplate(image, 21)
+    point = GetEyeCenterByTemplate(image, 26)
 
     print(point)
     ipoint = np.around(point).astype('int')

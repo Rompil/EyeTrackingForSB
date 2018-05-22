@@ -4,6 +4,8 @@ from glob import glob
 import cv2
 import numpy as np
 
+import utilitis
+
 
 class Tester():
 
@@ -34,15 +36,26 @@ class Tester():
 
     def run_test(self):
         result, etalon = [], []
+        counter = 0
         for img in self.images:
             r, e = self.__processImage(img)
             result.append(r)
             etalon.append(e)
+            print(counter)
+            counter += 1
         return result, etalon
 
     def compareResults(self):
         pass
 
 
+def dummy_method(img):
+    cx, cy = img.shape[:2]
+    cx /= 2
+    cy /= 2
+    return cx, cy
 if __name__ == '__main__':
     t = Tester('.\\imgs')
+    t.setMethod(utilitis.find_darkest_point)
+    r, e = t.run_test()
+    print((r))
