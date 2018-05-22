@@ -2,6 +2,7 @@ import functools
 import os
 
 import cv2
+import dlib
 import numpy as np
 from imutils import face_utils
 
@@ -30,7 +31,7 @@ def findCircles(image):
                                image.shape[1] // 2,
                                param1=60,
                                param2=20,
-                               minRadius=2 * expected_radius // 3,
+                               minRadius=2 * expected_radius // 4,
                                maxRadius=expected_radius)
     # ensure at least some circles were found
     if circles is not None:
@@ -39,8 +40,8 @@ def findCircles(image):
         pass
         #print('\n')
         #print(circles)
-        print("find {} circle(s)".format(len(circles)))
-        return circles[0, :]
+        # print("find {} circle(s)".format(len(circles)))
+        return circles[0, 0]
 
 
 def decoSaveImage(func):

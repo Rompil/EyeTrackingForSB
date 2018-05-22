@@ -31,31 +31,48 @@ class Tester():
         # eye_c = np.mean(ldmks_iris[:, :2], axis=0).astype(int)
 
         method_result = self.method(img)
-
+        method_result = method_result.tolist()
         return method_result, eye_c
 
     def run_test(self):
         result, etalon = [], []
         counter = 0
-        for img in self.images:
+        for img in self.images[0:]:  # here shrink a list to process
             r, e = self.__processImage(img)
             result.append(r)
             etalon.append(e)
             print(counter)
             counter += 1
+        self.result = result
+        self.etalon = etalon
         return result, etalon
 
     def compareResults(self):
+        diff = []
+        for r, e in zip(self.result, self.etalon):
+            r = np.array(r).flatten()
+            d = [r[0] - e[0], r[1] - e[1]]
+            diff.append(d)
+        return diff
         pass
 
-
+    def save_to_file(self, file_name):
+        with open(file_name, 'w') as datafile:
+            for r, e in zip(self.result, self.etalon):
+                r = np.array(r).flatten()
+                datafile.write('{}, {}, {}, {}\n'.format(r[0], r[1], e[0], e[1]))
 def dummy_method(img):
     cx, cy = img.shape[:2]
     cx /= 2
     cy /= 2
     return cx, cy
+
+
 if __name__ == '__main__':
     t = Tester('.\\imgs')
     t.setMethod(utilitis.find_darkest_point)
-    r, e = t.run_test()
-    print((r))
+    # t.setMethod(utilitis.findCircles)
+    t.run_test()
+    r = t.compareResults()
+    t.save_to_file('toRemove_darkest_point.csv')
+    print(r)
