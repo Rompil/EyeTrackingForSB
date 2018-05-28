@@ -36,7 +36,7 @@ def main():
                 shape = predictor(gray, rect)
                 shape = face_utils.shape_to_np(shape)
                 ld, rd = all_in_one_processing_corr(frame, shape)
-                print(ld, rd)
+                print(*ld, *rd)
 
                 for (x, y) in shape:
                     cv2.circle(frame, (x, y), 1, (0, 0, 255), -1)
@@ -44,8 +44,8 @@ def main():
             # frame = cv2.resize(frame, (int(0.25* width), int(0.25 * height)), interpolation=cv2.INTER_CUBIC)
             # cv2.imshow("Frame", frame)
             # cv2.waitKey(-1)
-            frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)  # !!!! and this too
-            out.write(frame)
+            # frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)  # !!!! and this too
+            # out.write(frame)
         else:
             break
     cap.release()

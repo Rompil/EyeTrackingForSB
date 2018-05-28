@@ -103,7 +103,7 @@ def _refineSrchTemplate(mat, matTmpl, ptResult):
 
 
 def subPixelAcc(image, location):
-    dx, dy = 0.0, 0.0
+    dx, dy = np.array([0.0]), np.array([0.0])
     A = np.array([[1, 1, -1, -1, 1],
                   [1, 0, -1, 0, 1],
                   [1, 1, -1, 1, 1],
